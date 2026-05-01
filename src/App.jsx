@@ -29,6 +29,7 @@ export default function SententiaApp() {
       date: "2024.05.20",
     },
   ]);
+
   const [selectedBook, setSelectedBook] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
   const [nickname, setNickname] = useState("");
@@ -44,8 +45,8 @@ export default function SententiaApp() {
     }
   }, [nickname]);
 
-  const handleInviteFriend = async () => {
-    alert("친구 초대 기능 (가상)");
+  const handleInviteFriend = () => {
+    alert("친구 초대 기능");
   };
 
   if (!nickname) {
@@ -59,12 +60,15 @@ export default function SententiaApp() {
           Sententia
         </h1>
         <div className="flex items-center gap-4">
-          <button className="text-gray-500 hover:text-indigo-600">
-            <UserCircle2 size={24} />
+          <button
+            onClick={handleInviteFriend}
+            className="text-gray-500 hover:text-indigo-600 transition-colors"
+          >
+            <UserCircle2 size={24} strokeWidth={1.5} />
           </button>
           <button
             onClick={() => setIsAdding(true)}
-            className="bg-indigo-950 text-white p-2 rounded-full"
+            className="bg-indigo-950 text-white p-2 rounded-full shadow-lg active:scale-90 transition-transform"
           >
             <Plus size={20} />
           </button>
@@ -72,31 +76,73 @@ export default function SententiaApp() {
       </header>
 
       <main className="max-w-2xl mx-auto px-6 pb-24">
+        <section className="mb-10 pt-4">
+          <p className="text-sm text-gray-400 font-medium uppercase tracking-widest mb-1">
+            My Archive
+          </p>
+          <h2 className="text-3xl font-bold">{nickname}님의 문장들</h2>
+
+          <div className="flex gap-6 mt-6">
+            <div>
+              <p className="text-2xl font-serif font-bold">{books.length}</p>
+              <p className="text-xs text-gray-400 uppercase">Books</p>
+            </div>
+            <div className="w-px h-10 bg-gray-100" />
+            <div>
+              <p className="text-2xl font-serif font-bold">
+                {books.filter((b) => b.hasFeedback).length}
+              </p>
+              <p className="text-xs text-gray-400 uppercase">AI Insights</p>
+            </div>
+          </div>
+        </section>
+
         <div className="grid grid-cols-2 gap-6">
           {books.map((book) => (
-            <div key={book.id} onClick={() => setSelectedBook(book)}>
+            <div
+              key={book.id}
+              onClick={() => setSelectedBook(book)}
+              className="group cursor-pointer"
+            >
               <div
-                className="aspect-[3/4] rounded-sm shadow-sm mb-3"
+                className="aspect-[3/4] rounded-sm shadow-sm group-hover:shadow-xl transition-all duration-500 relative overflow-hidden mb-3"
                 style={{
-                  backgroundImage: book.cover
-                    ? `url(${book.cover})`
-                    : undefined,
+                  backgroundImage: book.cover ? `url(${book.cover})` : undefined,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
-                  backgroundColor: book.cover
-                    ? undefined
-                    : book.coverColor,
+                  backgroundColor: book.cover ? undefined : book.coverColor,
                 }}
-              />
-              <h3 className="font-bold text-sm">{book.title}</h3>
-              <p className="text-xs text-gray-400">{book.author}</p>
+              >
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
+                {book.hasFeedback && (
+                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur px-2 py-1 rounded text-[10px] font-bold text-indigo-600 shadow-sm">
+                    AI
+                  </div>
+                )}
+              </div>
+
+              <h3 className="font-bold text-sm leading-tight mb-1 group-hover:text-indigo-600 transition-colors flex justify-between">
+                <span>{book.title}</span>
+                {book.price && (
+                  <span className="text-xs text-gray-400">
+                    {book.price}원
+                  </span>
+                )}
+              </h3>
+
+              <p className="text-xs text-gray-400 font-medium">
+                {book.author}
+              </p>
             </div>
           ))}
         </div>
       </main>
 
       {selectedBook && (
-        <BookDetail book={selectedBook} onClose={() => setSelectedBook(null)} />
+        <BookDetail
+          book={selectedBook}
+          onClose={() => setSelectedBook(null)}
+        />
       )}
 
       {isAdding && (
@@ -113,8 +159,22 @@ export default function SententiaApp() {
 }
 
 function BookDetail({ book, onClose }) {
+  const [chat, setChat] = useState([]);
+  const [input, setInput] = useState("");
+
+  const handleSend = () => {
+    const trimmed = input.trim();
+    if (!trimmed) return;
+
+    setChat((prev) => [
+      ...prev,
+      { id: Date.now(), text: trimmed, role: "user" },
+    ]);
+    setInput("");
+  };
+
   return (
-    <div className="fixed inset-0 bg-white">
+    <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
       <button onClick={onClose}>
         <ArrowLeft />
       </button>
@@ -132,7 +192,7 @@ function BookDetail({ book, onClose }) {
       <h2>{book.title}</h2>
       <p>{book.author}</p>
 
-      <div>
+      <div className="flex gap-1">
         {[...Array(5)].map((_, i) => (
           <Star key={i} size={16} />
         ))}
@@ -147,9 +207,21 @@ function LoginScreen({ onLogin }) {
   const [name, setName] = useState("");
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <input value={name} onChange={(e) => setName(e.target.value)} />
-      <button onClick={() => onLogin(name)}>입장</button>
+    <div className="min-h-screen bg-[#FDFCFB] flex items-center justify-center px-8">
+      <div className="w-full max-w-xs text-center">
+        <h1 className="text-5xl font-serif italic font-bold text-indigo-950 mb-4">
+          Sententia
+        </h1>
+
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="필명"
+          className="w-full p-4"
+        />
+
+        <button onClick={() => onLogin(name)}>입장</button>
+      </div>
     </div>
   );
 }
