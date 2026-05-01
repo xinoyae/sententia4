@@ -1,0 +1,9 @@
+{
+  "name": "Sententia",
+  "short_name": "Sententia",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FDFCFB",
+  "theme_color": "#1A1A1A",
+  "icons": []
+}
